@@ -12,19 +12,21 @@ typedef struct RBNode {
 
 // <0, 0, or >0 if a is  (<, =, and >) b
 typedef int (*rb_cmp)(const void *a, const void *b);
-typedef void (*rb_delete_key)(void *key);
+typedef void (*rb_freer)(void *ptr);
 
 // Wrapper so that we can keep track of the size of the tree.
-// Also saves passing around th cmp function everywhere.
+// Also saves passing around cmp function everywhere.
 typedef struct RBTree {
-	RBNode *      root;
-	int           size;
-	rb_cmp        cmp;
-	rb_delete_key delete_key;
+	RBNode * root;
+	int      size;
+	rb_cmp   cmp;
+	rb_freer free_key;
+	rb_freer free_value;
 } RBTree;
 
 // malloc and init a tree
-RBTree *rb_alloc(rb_cmp cmp, rb_delete_key delete_key);
+RBTree *rb_alloc(rb_cmp cmp, rb_freer free_key, rb_freer free_value);
+void rb_free(RBTree *tree);
 
 // O(1)
 bool rb_empty(RBTree *tree);
@@ -49,6 +51,7 @@ RBNode *rb_node_alloc(void *key, void *value);
 // tree transversal
 typedef void (*rb_vistor)(RBNode *n, void *extra);
 void rb_node_inorder(RBNode *n, rb_vistor visit, void *extra);
+void rb_node_postorder(RBNode *n, rb_vistor visit, void *extra);
 
 // comparison functions
 int rb_cmp_int(const void *a, const void *b);

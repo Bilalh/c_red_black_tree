@@ -5,15 +5,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-RBTree *rb_alloc(rb_cmp cmp, rb_delete_key delete_key) {
+RBTree *rb_alloc(rb_cmp cmp, rb_freer free_key, rb_freer free_value) {
 	RBTree *root = malloc(sizeof(RBTree));
 	root->root   = NULL;
 	root->size   = 0;
 
 	root->cmp        = cmp;
-	root->delete_key = delete_key;
+	root->free_key   = free_key;
+	root->free_value = free_value;
 
 	return root;
+}
+
+static void rb_free_sub(RBNode *n, void *tree_void) {
+	RBTree *tree = tree_void;
+	tree->free_key(n->key);
+	tree->free_value(n->value);
+	free(n);
+}
+
+void rb_free(RBTree *tree) {
+	if (tree == NULL) {
+		return;
+	}
+	rb_node_postorder(tree->root, rb_free_sub, tree);
+	free(tree);
 }
 
 bool rb_empty(RBTree *root) { return root->size == 0; }
@@ -76,6 +92,16 @@ void rb_node_inorder(RBNode *n, rb_vistor visit, void *extra) {
 	rb_node_inorder(n->left, visit, extra);
 	visit(n, extra);
 	rb_node_inorder(n->right, visit, extra);
+}
+
+void rb_node_postorder(RBNode *n, rb_vistor visit, void *extra) {
+	if (n == NULL) {
+		return;
+	}
+
+	rb_node_postorder(n->left, visit, extra);
+	rb_node_postorder(n->right, visit, extra);
+	visit(n, extra);
 }
 
 // Comparison functions

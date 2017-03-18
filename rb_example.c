@@ -41,13 +41,15 @@ static RBNode *process(int *arr, int low, int high) {
 	return n;
 }
 
+void nop(void *ptr) {}
+
 int main(int argc, char const *argv[]) {
 	int     arr[] = {100, 50, 150, 25, 75, 125, 175, 110};
 	RBNode *root  = array_to_bst(arr, sizeof(arr) / sizeof(int));
 	rb_print_diagram_int(root);
 	puts("");
 
-	RBTree *tree = rb_alloc(rb_cmp_int, free);
+	RBTree *tree = rb_alloc(rb_cmp_int, nop, nop);
 	tree->root   = root;
 	tree->size   = sizeof(arr) / sizeof(int);
 
@@ -59,6 +61,7 @@ int main(int argc, char const *argv[]) {
 		printf("No value found for key %d\n", key);
 	}
 	printf("");
+	rb_free(tree);
 
 	return 0;
 }
