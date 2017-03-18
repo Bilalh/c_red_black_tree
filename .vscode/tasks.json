@@ -1,0 +1,36 @@
+{
+	// tasks using a makefile
+	"version": "0.1.0",
+	"command": "make",
+	"isShellCommand": true,
+	"args": [],
+	"showOutput": "always",
+	"_runner": "terminal",
+	"tasks": [
+		{
+			"taskName": "build",
+			"args": [
+				"build"
+			]
+		},
+		{
+			"taskName": "clean",
+			"args": [
+				"clean"
+			]
+		},
+		{
+			"taskName": "test",
+			"args": [
+				"test"
+			]
+		},
+		{
+			"taskName": "run",
+			"args": [
+				"run"
+			]
+		}
+	]
+}
+

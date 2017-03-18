@@ -1,0 +1,8 @@
+---
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: ForContinuationAndIndentation
+ColumnLimit: 90
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
