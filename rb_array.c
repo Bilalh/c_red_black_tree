@@ -14,7 +14,7 @@ void rb_from_sorted_array(RBTree *tree, int *arr, int length) {
 }
 
 static RBNode *from_sorted_array(int *arr, int length) {
-	// The
+	// The idea is to split the array recursively to create the trees.
 
 	if (!arr || length == 0) {
 		return NULL;
@@ -26,7 +26,7 @@ static RBNode *from_sorted_array(int *arr, int length) {
 
 	RBNode *root = rb_node_alloc(&arr[mid], &arr[mid]);
 
-	// Since it will be balanced
+	// Since it will be balanced we can calculate the depth of the lowest level.
 	int depth   = log2(length);
 	root->left  = process(arr, low, mid - 1, depth);
 	root->right = process(arr, mid + 1, high, depth);
