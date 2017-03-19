@@ -48,13 +48,14 @@ int main(int argc, char const *argv[]) {
 
 	int *min_elem = rb_min(tree);
 	printf("min key %d\n", *min_elem);
+	printf("depth of tree %d\n", rb_depth(tree));
 
 	puts("");
 	// Deleting every 4th element
 	for (int i = 0; i < sizeof(arr) / sizeof(int); i += 4) {
 		printf("   Deleting  %03d \n", arr[i]);
 		bool res = rb_delete(tree, &arr[i]);
-		printf("   >Result  %d\n", res);
+		printf("   >Result   %d\n", res);
 		// rb_print_diagram_int(tree->root);
 		printf("   rb_validate %d\n", rb_validate(tree));
 		puts("");

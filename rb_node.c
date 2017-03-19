@@ -74,13 +74,35 @@ static void rb_free_sub(RBNode *n, void *tree_void) {
 
 // size
 
-bool rb_empty(RBTree *root) { return root->size == 0; }
+bool rb_empty(RBTree *tree) { return !tree || tree->size == 0; }
 
-int rb_size(RBTree *root) {
-	if (root == NULL) {
+int rb_size(RBTree *tree) {
+	if (tree == NULL) {
 		return 0;
 	}
-	return root->size;
+	return tree->size;
+}
+
+static int rb_depth_sub(RBNode *n);
+int rb_depth(RBTree *tree) {
+	if (rb_empty(tree)) {
+		return 1;
+	}
+
+	return rb_depth_sub(tree->root);
+}
+
+static int rb_depth_sub(RBNode *n) {
+	if (n == NULL) {
+		return 0;
+	}
+	int l = 1 + rb_depth_sub(n->left);
+	int r = 1 + rb_depth_sub(n->right);
+	if (l > r) {
+		return l;
+	} else {
+		return r;
+	}
 }
 
 // find

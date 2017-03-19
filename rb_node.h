@@ -66,6 +66,7 @@ void rb_node_postorder(RBNode *n, rb_vistor visit, void *extra);
 bool rb_validate(RBTree *tree);
 bool rb_is_bst(RBTree *tree);
 bool rb_is_balanced(RBTree *tree);
+int rb_depth(RBTree *tree);
 
 // Misc
 int rb_cmp_int(const void *a, const void *b);

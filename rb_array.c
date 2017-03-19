@@ -1,74 +1,79 @@
+#include "rb_array.h"
 #include "rb_node.h"
 #include "rb_print.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-static RBNode *process(int *arr, int low, int high, RBColour c);
+static RBNode *process(int *arr, int low, int high, int left);
+static RBNode *from_sorted_array(int *arr, int length);
 
-RBNode *array_to_bst(int *arr, int length) {
+void rb_from_sorted_array(RBTree *tree, int *arr, int length) {
+	tree->root = from_sorted_array(arr, length);
+	tree->size = length;
+}
+
+static RBNode *from_sorted_array(int *arr, int length) {
+	// The
+
 	if (!arr || length == 0) {
 		return NULL;
 	}
-
-	qsort(arr, length, sizeof(int), rb_cmp_int);
-	// for(size_t i= 0; i < length; ++i ){
-	// 	printf("%zu :%d\n", i, arr[i]);
-	// }
 
 	int low  = 0;
 	int high = length - 1;
 	int mid  = (low + high) / 2;
 
 	RBNode *root = rb_node_alloc(&arr[mid], &arr[mid]);
-	// printf("%d, %d, %d\n", low, high,mid);
-	root->left  = process(arr, low, mid - 1, RB_RED);
-	root->right = process(arr, mid + 1, high, RB_RED);
+
+	// Since it will be balanced
+	int depth   = log2(length);
+	root->left  = process(arr, low, mid - 1, depth);
+	root->right = process(arr, mid + 1, high, depth);
 
 	root->colour = RB_BLACK;
+
 	return root;
 }
 
-static RBNode *process(int *arr, int low, int high, RBColour c) {
+static RBNode *process(int *arr, int low, int high, int left) {
 	int mid = (low + high) / 2;
-	// printf("%d, %d, %d\n", low, high, mid);
+
 	if (!arr || low > high) {
 		return NULL;
 	}
 
 	RBNode *n = rb_node_alloc(&arr[mid], &arr[mid]);
-	n->colour = c;
+	n->colour = RB_BLACK;
 
-	c = invert_colour(c);
 	if (low != high) {
-		n->left  = process(arr, low, mid - 1, c);
-		n->right = process(arr, mid + 1, high, c);
+		n->left  = process(arr, low, mid - 1, left - 1);
+		n->right = process(arr, mid + 1, high, left - 1);
 	}
+	if (left == 1) {
+		n->colour = RB_RED;
+	}
+
 	return n;
 }
 
-// We are allocating on the stack
-void nop(void *ptr) {}
+// We are allocating the keys on the stack
+static void nop(void *ptr) {}
 
 int main(int argc, char const *argv[]) {
-	int     arr[] = {100, 50, 150, 25, 75, 125, 175, 110};
-	RBNode *root  = array_to_bst(arr, sizeof(arr) / sizeof(int));
-	rb_print_diagram_int(root);
-	puts("");
+	int arr[] = {100, 50, 150, 25, 75, 125, 175, 110};
+	int size  = sizeof(arr) / sizeof(int);
+	qsort(arr, size, sizeof(int), rb_cmp_int);
 
-	RBTree *tree = rb_alloc(rb_cmp_int, nop, nop);
-	tree->root   = root;
-	tree->size   = sizeof(arr) / sizeof(int);
+	for (int i = 0; i < size; i++) {
+		RBTree *tree = rb_alloc(rb_cmp_int, nop, nop);
+		rb_from_sorted_array(tree, arr + i, size - i);
+		rb_print_diagram_int(tree->root);
 
-	int  key = 150;
-	int *val = rb_find(tree, &key);
-	if (val != NULL) {
-		printf("Value %d found for key %d\n", *val, key);
-	} else {
-		printf("No value found for key %d\n", key);
+		printf("rb_validate %d\n", rb_validate(tree));
+		puts(" ");
+		rb_free(tree);
 	}
-	printf("rb_validate %d\n", rb_validate(tree));
-
-	rb_free(tree);
 
 	return 0;
 }
