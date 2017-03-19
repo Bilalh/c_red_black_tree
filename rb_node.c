@@ -15,17 +15,32 @@
 	} while (0)
 
 // static functions
-//
-static bool is_red(RBNode *n);
-static bool is_black(RBNode *n);
+// needed by other methods
 
-// right -> left
+// Right -> left
 static RBNode *rotate_left(RBTree *tree, RBNode *n);
-// left -> right
+// Left -> right
 static RBNode *rotate_right(RBTree *tree, RBNode *n);
-// invert the colours of a nodes and its children
+// Invert the colours of a nodes and its children
 static void flip(RBTree *tree, RBNode *n);
+
 // Red -> Black and vice versa
+static RBNode *rebalance(RBTree *tree, RBNode *n);
+// Min node rooted at n
+static RBNode *rb_min_node(RBNode *n);
+
+// n is red
+// n->left && n->left->left are black
+// converts either n->left or it children to red
+static RBNode *left_to_red(RBTree *tree, RBNode *n);
+
+// n is red
+// n->right && n->right->left are black
+// converts either n->right or it children to red
+static RBNode *right_to_red(RBTree *tree, RBNode *n);
+
+// Remove and return the min node rooted at n
+static RBNode *remove_min(RBTree *tree, RBNode *n);
 
 // init/free
 
@@ -51,6 +66,7 @@ void rb_free(RBTree *tree) {
 
 static void rb_free_sub(RBNode *n, void *tree_void) {
 	RBTree *tree = tree_void;
+	dprintf("Freeing %d\n", *(int *)n->key);
 	tree->free_key(n->key);
 	tree->free_value(n->value);
 	free(n);
@@ -98,6 +114,28 @@ void *rb_find(RBTree *tree, void *key) {
 	} else {
 		return NULL;
 	}
+}
+
+void *rb_min(RBTree *tree) {
+	if (tree == NULL) {
+		return NULL;
+	}
+	RBNode *res = rb_min_node(tree->root);
+	if (res) {
+		return res->key;
+	} else {
+		return NULL;
+	}
+}
+
+static RBNode *rb_min_node(RBNode *n) {
+	while (n) {
+		if (n->left == NULL) {
+			return n;
+		}
+		n = n->left;
+	}
+	return NULL;
 }
 
 // insert
@@ -183,7 +221,7 @@ RBColour invert_colour(RBColour c) {
 	}
 }
 
-static bool is_red(RBNode *n) {
+bool is_red(RBNode *n) {
 	if (n == NULL) {
 		return false;
 	} else {
@@ -191,12 +229,129 @@ static bool is_red(RBNode *n) {
 	}
 }
 
-static bool is_black(RBNode *n) {
+bool is_black(RBNode *n) {
 	if (n == NULL) {
 		return false;
 	} else {
 		return n->colour == RB_BLACK;
 	}
+}
+
+// delete
+
+static RBNode *rb_delete_sub(RBTree *tree, RBNode *n, void *key);
+bool rb_delete(RBTree *tree, void *key) {
+	assert(tree);
+	assert(key);
+
+	if (!rb_find(tree, key)) {
+		return false;
+	}
+
+	if (!is_red(tree->root->left) && !is_red(tree->root->right)) {
+		tree->root->colour = RB_RED;
+	}
+
+	tree->root = rb_delete_sub(tree, tree->root, key);
+	if (!rb_empty(tree)) {
+		tree->root->colour = RB_BLACK;
+	}
+	tree->size--;
+	return true;
+}
+
+static RBNode *rb_delete_sub(RBTree *tree, RBNode *n, void *key) {
+	assert(tree);
+	assert(n);
+	assert(key);
+
+	if (tree->cmp(key, n->key) < 0) {
+		if (!is_red(n->left) && !is_red(n->left->left)) {
+			n = left_to_red(tree, n);
+		}
+		n->left = rb_delete_sub(tree, n->left, key);
+	} else {
+		if (is_red(n->left)) {
+			n = rotate_right(tree, n);
+		}
+		if (tree->cmp(key, n->key) == 0 && n->right == NULL) {
+			tree->free_key(n->key);
+			tree->free_value(n->value);
+			free(n);
+			return NULL;
+		}
+		if (!is_red(n->right) && !is_red(n->right->left)) {
+			n = right_to_red(tree, n);
+		}
+		if (tree->cmp(key, n->key) == 0) {
+			RBNode *m = rb_min_node(n->right);
+			tree->free_key(n->key);
+			tree->free_value(n->value);
+			n->key   = m->key;
+			n->value = m->value;
+			n->right = remove_min(tree, n->right);
+			free(m);
+		} else {
+			n->right = rb_delete_sub(tree, n->right, key);
+		}
+	}
+
+	return rebalance(tree, n);
+}
+
+static RBNode *left_to_red(RBTree *tree, RBNode *n) {
+	assert(tree);
+	assert(n);
+
+	flip(tree, n);
+	if (is_red(n->right->left)) {
+		n->right = rotate_right(tree, n->right);
+		n        = rotate_left(tree, n);
+		flip(tree, n);
+	}
+	return n;
+}
+
+static RBNode *right_to_red(RBTree *tree, RBNode *n) {
+	assert(tree);
+	assert(n);
+
+	flip(tree, n);
+	if (is_red(n->left->left)) {
+		n = rotate_right(tree, n);
+		flip(tree, n);
+	}
+	return n;
+}
+
+RBNode *remove_min(RBTree *tree, RBNode *n) {
+	assert(tree);
+	assert(n);
+	if (n->left == NULL) {
+		return NULL;
+	}
+
+	if (!is_red(n->left) && !is_red(n->left->left)) {
+		n = left_to_red(tree, n);
+	}
+	n->left = remove_min(tree, n->left);
+	return rebalance(tree, n);
+}
+
+static RBNode *rebalance(RBTree *tree, RBNode *n) {
+	assert(tree);
+	assert(n);
+
+	if (is_red(n->right)) {
+		n = rotate_left(tree, n);
+	}
+	if (is_red(n->left) && is_red(n->left->left)) {
+		n = rotate_right(tree, n);
+	}
+	if (is_red(n->left) && is_red(n->right)) {
+		flip(tree, n);
+	}
+	return n;
 }
 
 // Node
@@ -233,26 +388,48 @@ void rb_node_postorder(RBNode *n, rb_vistor visit, void *extra) {
 
 // Validation
 
+// Checks that we kept track of the size correctly
+static bool vaildate_size(RBTree *tree);
+
 bool rb_validate(RBTree *tree) {
+	bool res = true;
 	if (tree == NULL) {
-		return true;
+		return res;
 	}
+
 	if ((tree->size == 0 && tree->root != NULL) ||
 		(tree->root != NULL && tree->size == 0)) {
 		fprintf(stderr, "rb_validate: size inconsistent\n");
-		return false;
+		res = false;
 	}
+
+	res &= vaildate_size(tree);
 
 	if (!rb_is_bst(tree)) {
 		fprintf(stderr, "rb_validate: not a BST\n");
-		return false;
+		res = false;
 	}
 
 	if (!rb_is_balanced(tree)) {
 		fprintf(stderr, "rb_validate: not balanced\n");
-		return false;
+		res = false;
 	}
 
+	return res;
+}
+
+static void update_count(RBNode *n, void *extra) {
+	int *count = (int *)extra;
+	(*count)++;
+}
+
+static bool vaildate_size(RBTree *tree) {
+	int count = 0;
+	rb_node_inorder(tree->root, update_count, &count);
+	if (count != tree->size) {
+		fprintf(stderr, "rb_validate: expected %03d is %03d\n", count, tree->size);
+		return false;
+	}
 	return true;
 }
 
