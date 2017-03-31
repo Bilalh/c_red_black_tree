@@ -1,8 +1,8 @@
 # Red Black Tree in C
 
-## Requeiments:
+## Requirements:
 
-Tested on MacOS 10.10 and Ubuntu 16.04 using `clang`.
+Tested on Ubuntu 16.04 and MacOS 10.10 using `clang`.
 
 ## Usage
 
@@ -10,11 +10,11 @@ build:
 
 	make
 
-usage example:
+Example:
 
 	./bin/rb_usage
 
-See `rb_usage.c` for details
+See `rb_usage.c` for details.
 
 
 For an example of converting a sorted array to a red black tree run:
@@ -24,7 +24,7 @@ For an example of converting a sorted array to a red black tree run:
 and see `rb_array.c` for details.
 
 
-The code to produce the printed trees is in `rb_print`.
+The code to produce the printed trees is in `rb_print.c`.
 
 	|100-----
 	|       |50------
